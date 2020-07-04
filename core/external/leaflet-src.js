@@ -1,5 +1,5 @@
 /* @preserve
- * Leaflet 1.6.0+master.e8c28b9, a JS library for interactive maps. http://leafletjs.com
+ * Leaflet 1.6.0+fix-draw-tools.ac58bf9, a JS library for interactive maps. http://leafletjs.com
  * (c) 2010-2019 Vladimir Agafonkin, (c) 2010-2011 CloudMade
  */
 
@@ -9,7 +9,7 @@
   (factory((global.L = {})));
 }(this, (function (exports) { 'use strict';
 
-  var version = "1.6.0+master.d8dd2f0a";
+  var version = "1.6.0+fix.d8dd2f0a";
 
   /*
    * @namespace Util
@@ -1280,7 +1280,7 @@
   		return latIntersects && lngIntersects;
   	},
 
-  	// @method overlaps(otherBounds: Bounds): Boolean
+  	// @method overlaps(otherBounds: LatLngBounds): Boolean
   	// Returns `true` if the rectangle overlaps the given bounds. Two bounds overlap if their intersection is an area.
   	overlaps: function (bounds) {
   		bounds = toLatLngBounds(bounds);
@@ -2015,7 +2015,6 @@
   var POINTER_MOVE =   msPointer ? 'MSPointerMove'   : 'pointermove';
   var POINTER_UP =     msPointer ? 'MSPointerUp'     : 'pointerup';
   var POINTER_CANCEL = msPointer ? 'MSPointerCancel' : 'pointercancel';
-  var TAG_WHITE_LIST = ['INPUT', 'SELECT', 'OPTION'];
 
   var _pointers = {};
   var _pointerDocListener = false;
@@ -2056,13 +2055,8 @@
 
   function _addPointerStart(obj, handler, id) {
   	var onDown = bind(function (e) {
-  		if (e.pointerType !== (e.MSPOINTER_TYPE_MOUSE || 'mouse')) {
-  			// In IE11, some touch events needs to fire for form controls, or
-  			// the controls will stop working. We keep a whitelist of tag names that
-  			// need these events. For other target tags, we prevent default on the event.
-  			if (ie && TAG_WHITE_LIST.indexOf(e.target.tagName) >= 0) {
-  				return;
-  			}
+  		// IE10 specific: MsTouch needs preventDefault. See #2000
+  		if (e.MSPOINTER_TYPE_TOUCH && e.pointerType === e.MSPOINTER_TYPE_TOUCH) {
   			preventDefault(e);
   		}
 
